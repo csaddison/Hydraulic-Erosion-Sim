@@ -33,7 +33,7 @@ pers = .5
 map_seed = 1
 
 # Rain parameters
-p_num_drops = 2000
+p_num_drops = 20000
 p_move_cap = 100
 p_drop_size = 1
 p_drop_seed = 874923
