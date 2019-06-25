@@ -14,12 +14,12 @@ Simulating erosion on procedularly generated terrain.
 
 # ---------------------------------------- IMPORTS ----------------------------------------
 
-import noisev2
+import noise
 import numpy as np
 import math
 from mayavi import mlab
 from itertools import product
-from scipy import interpolate
+from scipy import interpolate, ndimage
 
 
 # ---------------------------------------- PARAMETERS ----------------------------------------
@@ -33,7 +33,7 @@ pers = .5
 map_seed = 1
 
 # Rain parameters
-p_num_drops = 20000
+p_num_drops = 4
 p_move_cap = 100
 p_drop_size = 1
 p_drop_seed = 874923
@@ -54,6 +54,7 @@ colormap = 'YlGn'
 z_scale = 5
 board_scale = 10
 offset = 0.05
+blur = 1
 
 
 
@@ -61,7 +62,7 @@ offset = 0.05
 # ---------------------------------------- LOADING MAP ----------------------------------------
 
 # Noise map
-noise_raw = noisev2.Octave(res, oct, lanc, pers, map_seed)
+noise_raw = noise.Octave(res, oct, lanc, pers, map_seed)
 mapp = noise_raw[1:-2,1:-2] #removing edge artifacts
 
 # Simulating generation
@@ -118,9 +119,26 @@ for drop in drops:
                 ermap[index_0] += deposit
                 speed = 0
 
+                """
                 # Bilinear deposition
-                
+                bottom_left = [int(math.floor(pos_t[0])), int(math.floor(pos_t[1]))]
+                bottom_right = [int(math.ceil(pos_t[0])), int(math.floor(pos_t[1]))]
+                top_left = [int(math.floor(pos_t[0])), int(math.ceil(pos_t[1]))]
+                top_right = [int(math.ceil(pos_t[0])), int(math.ceil(pos_t[1]))]
 
+                cell_offset_x = pos_t[0] - bottom_left[0]
+                cell_offset_y = pos_t[1] - top_left[1]
+
+                try:
+                    ermap[bottom_left] += deposit * (1 - cell_offset_x) * (1 - cell_offset_y)
+                    ermap[bottom_right] += deposit * cell_offset_x * (1 - cell_offset_y)
+                    ermap[top_left] += deposit * (1 - cell_offset_x) * cell_offset_y
+                    ermap[top_right] += deposit * cell_offset_x * cell_offset_y
+                except:
+                    #print('Failure')
+                    continue
+                """
+                
 
             # Eroding sediment
             else:
@@ -130,18 +148,31 @@ for drop in drops:
                 weight_norm = 4 * (math.pi * k_erode_radius ** 2) / 3
 
                 # Radius weighted erosion
-                for x, y in product(range(k_erode_radius), range(k_erode_radius)):
+                lookup = np.zeros((k_erode_radius + 1, k_erode_radius + 1))
+                def distance(points):
+                    radius = math.floor(len(points) / 2)
+                    dist = math.sqrt((points[0] - radius) ** 2 + (points[1] - radius) ** 2)
+                    return dist
+                    
+                
+
+                i = 0
+                j = 0
+                for x, y in product(range(k_erode_radius + 1), range(k_erode_radius + 1)):
                     # Equivalent of nested for loop
                     if np.linalg.norm(np.array([x, y])) <= k_erode_radius:
                         index_i = tuple([index_0[0] + x, index_0[1] + y])
                         index_j = tuple([index_0[0] - x, index_0[1] - y])
                         wi = k_erode_radius - abs(np.linalg.norm(np.array([index_i[0] - index_0[0], index_i[1] - index_0[1]])))
                         wj = k_erode_radius - abs(np.linalg.norm(np.array([index_j[0] - index_0[0], index_j[1] - index_0[1]])))
+                        i += wi
+                        j += wj
                         try:
                             ermap[index_i] -= wi * erode / weight_norm
                             ermap[index_j] -= wj * erode / weight_norm
                         except:
                             continue
+                print(i, j, weight_norm)
 
             # Evaporating water
             water_cap -= p_drop_size / p_move_cap
@@ -156,6 +187,9 @@ V = 1/3 h * pi R^2
 """
 
 # ---------------------------------------- PLOTTING MAP ----------------------------------------
+
+# Blurring
+#ermap = ndimage.filters.gaussian_filter(ermap, blur)
 
 # Mayavi surface (GEN 0)
 e = mlab.surf(ermap, colormap = colormap, extent = [0, board_scale, 0, board_scale, 0, z_scale])

@@ -14,12 +14,12 @@ Simulating erosion on procedularly generated terrain.
 
 # ---------------------------------------- IMPORTS ----------------------------------------
 
-import noisev2
+import noise
 import numpy as np
 import math
 from mayavi import mlab
 from itertools import product
-from scipy import interpolate
+from scipy import ndimage
 
 
 # ---------------------------------------- PARAMETERS ----------------------------------------
@@ -54,6 +54,7 @@ colormap = 'YlGn'
 z_scale = 5
 board_scale = 10
 offset = 0.05
+blur = 1
 
 
 
@@ -61,12 +62,11 @@ offset = 0.05
 # ---------------------------------------- LOADING MAP ----------------------------------------
 
 # Noise map
-noise_raw = noisev2.Octave(res, oct, lanc, pers, map_seed)
+noise_raw = noise.Octave(res, oct, lanc, pers, map_seed)
 mapp = noise_raw[1:-2,1:-2] #removing edge artifacts
 
 # Simulating generation
 ermap = mapp
-#uy, ux = np.gradient(ermap)
 
 # Generating drops
 np.random.seed(p_drop_seed)
@@ -118,10 +118,6 @@ for drop in drops:
                 ermap[index_0] += deposit
                 speed = 0
 
-                # Bilinear deposition
-                
-
-
             # Eroding sediment
             else:
                 erode = min((carry_cap - sed_carry) * k_erosion_rate, -del_h)
@@ -130,9 +126,10 @@ for drop in drops:
                 weight_norm = 4 * (math.pi * k_erode_radius ** 2) / 3
 
                 # Radius weighted erosion
-                for x, y in product(range(k_erode_radius), range(k_erode_radius)):
+                for x, y in product(range(1, k_erode_radius + 1), range(1, k_erode_radius + 1)):
                     # Equivalent of nested for loop
                     if np.linalg.norm(np.array([x, y])) <= k_erode_radius:
+                        print(np.linalg.norm(np.array([x, y])))
                         index_i = tuple([index_0[0] + x, index_0[1] + y])
                         index_j = tuple([index_0[0] - x, index_0[1] - y])
                         wi = k_erode_radius - abs(np.linalg.norm(np.array([index_i[0] - index_0[0], index_i[1] - index_0[1]])))
@@ -155,10 +152,14 @@ Apply erosion radius normalization as volume of cone with fixed height 1 and var
 V = 1/3 h * pi R^2
 """
 
+
+
 # ---------------------------------------- PLOTTING MAP ----------------------------------------
+
+# Blurring
+ermap = ndimage.filters.gaussian_filter(ermap, blur)
 
 # Mayavi surface (GEN 0)
 e = mlab.surf(ermap, colormap = colormap, extent = [0, board_scale, 0, board_scale, 0, z_scale])
 e.module_manager.scalar_lut_manager.reverse_lut = True
-#mlab.savefig('mayavi.png', size = (500, 500))
 mlab.show()
