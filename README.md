@@ -2,6 +2,13 @@
 
 ###### Processing heightmaps for simulated droplet-based erosion.
 
+<p id="img_cont">
+    <img src="Images/raw.png" width="300">
+    <img src="Images/erode.png"  width="300">
+</p>
+
+_Above: the unprocessed fractal noise and the same map after 50,000 droplets_
+
 Creating procedural terrain from heghtmaps is easily done with [classical noise generators](https://github.com/csaddison/Perlin-Noise) and fractal noise, however making that terrain look realistic is often much harder. Depending on how many octaves you use, proceduarly generated terrain is either too smooth or too jagged to look realistic. Natural terrain has a combination of these features, with rocky mountains and flatter rolling plains. A leading cause of this is the natural erosion of the terrain over time, especially due to rivers and rainfall. By simulating thousands of rain droplets we can compute the movement of the water accross the land and erode and deposit sediment as the drop travels. This leads to realistic erosion patterns, especially in hilly regions, and realisitc valleys in between them. This project is largely a pythonic implementation of the hydraulic erosion algorithm described [here](https://www.firespark.de/resources/downloads/implementation%20of%20a%20methode%20for%20hydraulic%20erosion.pdf).
 
 ### Changes
