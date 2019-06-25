@@ -33,8 +33,8 @@ pers = .5
 map_seed = 1
 
 # Rain parameters
-p_num_drops = 2000
-p_move_cap = 100
+p_num_drops = 50000
+p_move_cap = 250
 p_drop_size = 1
 p_drop_seed = 874923
 p_initial_vel = [0, 0]
@@ -76,6 +76,9 @@ drops = np.random.rand(p_num_drops, 2)
 
 
 # ---------------------------------------- EROSION PROCESS ----------------------------------------
+
+# Counting progress (1/2)
+i = 0
 
 # Initializing drop
 for drop in drops:
@@ -129,7 +132,6 @@ for drop in drops:
                 for x, y in product(range(1, k_erode_radius + 1), range(1, k_erode_radius + 1)):
                     # Equivalent of nested for loop
                     if np.linalg.norm(np.array([x, y])) <= k_erode_radius:
-                        print(np.linalg.norm(np.array([x, y])))
                         index_i = tuple([index_0[0] + x, index_0[1] + y])
                         index_j = tuple([index_0[0] - x, index_0[1] - y])
                         wi = k_erode_radius - abs(np.linalg.norm(np.array([index_i[0] - index_0[0], index_i[1] - index_0[1]])))
@@ -146,6 +148,11 @@ for drop in drops:
         # Dead drops
         else:
             break
+
+    # Counting progress (2/2)    
+    if i % 500 == 0:
+        print(i) 
+    i += 1
 
 """
 Apply erosion radius normalization as volume of cone with fixed height 1 and variable radius R
