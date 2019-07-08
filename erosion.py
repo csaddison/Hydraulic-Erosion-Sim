@@ -2,11 +2,13 @@
 # 4/9/19
 # ---------------------------------------- Erosion Simulation ----------------------------------------
 """
-Simulating erosion on procedularly generated terrain.
+Simulating erosion on procedularly generated terrain. 
 """
 # To-do:
 #   6/3/19 -- Need to speed up distance-weighted erosion, currently utilizes nested for loop
-#   --> want to add gaussian blur to final image (scipy.ndimage.filters.gaussian_filter)
+#       --> want to add gaussian blur to final image (scipy.ndimage.filters.gaussian_filter)
+#   6/24/19 -- Finished preliminary implementation of erosion & README
+#   7/1/19 -- Moved parameters to separate file & started droplet class
 #
 # ----------------------------------------------------------------------------------------------------
 # ----------------------------------------------------------------------------------------------------
@@ -20,41 +22,43 @@ import math
 from mayavi import mlab
 from itertools import product
 from scipy import ndimage
+import parameters as param
 
 
 # ---------------------------------------- PARAMETERS ----------------------------------------
 
 # Noise parameters
-grid = 2
-res = 256 #ends up being (res-2), removing edge artifacts
-oct = 4
-lanc = 2
-pers = .5
-map_seed = 1
+grid = param.noise_scale
+res = param.terrain_reolution
+oct = param.noise_octaves
+lanc = param.noise_lacunarity
+pers = param.noise_persistance
+map_seed = param.map_seed
 
 # Rain parameters
-p_num_drops = 50000
-p_move_cap = 250
-p_drop_size = 1
-p_drop_seed = 874923
-p_initial_vel = [0, 0]
-p_grav = 20
+p_num_drops = param.drop_iterations
+p_move_cap = param.drop_move_cap
+p_drop_size = param.drop_initial_water
+p_drop_seed = param.rain_seed
+p_initial_vel = param.rain_initial_vel
+
+# Movement parameters
+p_grav = param.world_gravity
+k_momentum = param.drop_momentum
+k_water_cuttoff = param.water_cuttoff
 
 # Erosion parameters
-k_momentum = .4
-k_erosion_rate = .9
-k_capacity = 10
-k_deposition_rate =  .02
-k_erode_radius = 4
-k_min_slope_capacity = .01
-k_water_cuttoff = .001
+k_erosion_rate = param.erosion_rate
+k_capacity = param.sediment_capacity_multiplier
+k_deposition_rate =  param.deposition_rate
+k_erode_radius = param.erosion_radius
+k_min_slope_capacity = param.min_slope_capacity
 
 # Board parameters
-colormap = 'YlGn'
-z_scale = 5
-board_scale = 10
-offset = 0.05
-blur = 1
+colormap = param.map_colormap
+z_scale = param.map_z_scale
+board_scale = param.map_board_scale
+blur = param.processing_blur
 
 
 
