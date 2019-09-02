@@ -18,7 +18,7 @@ noise_persistance = .8
 map_seed = 5
 
 # Rain parameters
-drop_iterations = 50000
+drop_iterations = 25000
 drop_move_cap = 250
 drop_initial_water = 1
 rain_seed = 874923
